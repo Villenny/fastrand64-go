@@ -1,7 +1,7 @@
-[![GitHub issues](https://img.shields.io/github/issues/Villenny/fastrand64-go)](https://github.com/Villenny/concurrency-go/issues)
-[![GitHub forks](https://img.shields.io/github/forks/Villenny/fastrand64-go)](https://github.com/Villenny/concurrency-go/network)
-[![GitHub stars](https://img.shields.io/github/stars/Villenny/fastrand64-go)](https://github.com/Villenny/concurrency-go/stargazers)
-[![GitHub license](https://img.shields.io/github/license/Villenny/fastrand64-go)](https://github.com/Villenny/concurrency-go/blob/master/LICENSE)
+[![GitHub issues](https://img.shields.io/github/issues/Villenny/fastrand64-go)](https://github.com/Villenny/fastrand64-go/issues)
+[![GitHub forks](https://img.shields.io/github/forks/Villenny/fastrand64-go)](https://github.com/Villenny/fastrand64-go/network)
+[![GitHub stars](https://img.shields.io/github/stars/Villenny/fastrand64-go)](https://github.com/Villenny/fastrand64-go/stargazers)
+[![GitHub license](https://img.shields.io/github/license/Villenny/fastrand64-go)](https://github.com/Villenny/fastrand64-go/blob/master/LICENSE)
 ![Go](https://github.com/Villenny/fastrand64-go/workflows/Go/badge.svg?branch=master)
 ![Codecov branch](https://img.shields.io/codecov/c/github/villenny/fastrand64-go/master)
 
@@ -57,7 +57,7 @@ Using SyncPoolRNG:
 - Xoshiro256ss is roughly 25% faster than whatever golang uses natively
 - The Pool wrapped version of Xoshiro is roughly half as fast as the native threadsafe golang random generator
 - BUT, the pool wrapped Xoshiro murders the native in a multicore environment where there would otherwise be lots of contention. 4X faster on my 4 core machine in the pathological case of every core doing nothing but generate random numbers.
-- It would probably be faster still (although I havent tested this) to feed echo goproc its own unsafe generator in their context and not use the pool.
+- It would probably be faster still (although I havent tested this) to feed each goproc its own unsafe generator in their context arg and not use the pool.
 
 ```
 goos: windows

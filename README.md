@@ -54,9 +54,9 @@ Using SyncPoolRNG:
 
 ## Benchmark
 
-- Xoshiro256ss is roughly 25% faster than whatever golang uses natively
-- The Pool wrapped version of Xoshiro is roughly half as fast as the native threadsafe golang random generator
-- BUT, the pool wrapped Xoshiro murders the native in a multicore environment where there would otherwise be lots of contention. 4X faster on my 4 core machine in the pathological case of every core doing nothing but generate random numbers.
+- Xoshiro256ss is roughly 3X faster than whatever golang uses natively
+- The Pool wrapped version of Xoshiro is roughly half as fast as the native threadsafe golang random generator, almost entirely due to the cost of checking into and out of the pool.
+- BUT, the pool wrapped Xoshiro generator murders the native in a multicore environment where there would otherwise be lots of contention. 4X faster on my 4 core machine in the pathological case of every core doing nothing but generate random numbers.
 - It would probably be faster still (although I havent tested this) to feed each goproc its own unsafe generator in their context arg and not use the pool.
 
 ```
@@ -64,41 +64,42 @@ goos: windows
 goarch: amd64
 pkg: github.com/villenny/concurrency-go
 Benchmark_UnsafeXoshiro256ssRNG
-Benchmark_UnsafeXoshiro256ssRNG-8                       425218730                5.76 ns/op            0 B/op          0 allocs/op
+Benchmark_UnsafeXoshiro256ssRNG-8                       910025752                2.66 ns/op            0 B/op          0 allocs/op
 Benchmark_UnsafeRandRNG
-Benchmark_UnsafeRandRNG-8                               336958443                7.31 ns/op            0 B/op          0 allocs/op
+Benchmark_UnsafeRandRNG-8                               332294956                7.25 ns/op            0 B/op          0 allocs/op
 Benchmark_FastModulo
-Benchmark_FastModulo-8                                  325541452                7.45 ns/op            0 B/op          0 allocs/op
+Benchmark_FastModulo-8                                  309598480                7.49 ns/op            0 B/op          0 allocs/op
 Benchmark_Modulo
-Benchmark_Modulo-8                                      298817056                8.11 ns/op            0 B/op          0 allocs/op
+Benchmark_Modulo-8                                      299561928                8.07 ns/op            0 B/op          0 allocs/op
 Benchmark_SyncPoolXoshiro256ssRNG_Uint32n_Serial
-Benchmark_SyncPoolXoshiro256ssRNG_Uint32n_Serial-8      67347566                35.4 ns/op             0 B/op          0 allocs/op
+Benchmark_SyncPoolXoshiro256ssRNG_Uint32n_Serial-8      58596038                35.5 ns/op             0 B/op          0 allocs/op
 Benchmark_SyncPoolXoshiro256ssRNG_Uint32n_Parallel
-Benchmark_SyncPoolXoshiro256ssRNG_Uint32n_Parallel-8    286351929                8.98 ns/op            0 B/op          0 allocs/op
+Benchmark_SyncPoolXoshiro256ssRNG_Uint32n_Parallel-8    286352749                8.43 ns/op            0 B/op          0 allocs/op
 Benchmark_SyncPoolXoshiro256ssRNG_Uint64_Serial
-Benchmark_SyncPoolXoshiro256ssRNG_Uint64_Serial-8       68643208                34.9 ns/op             0 B/op          0 allocs/op
+Benchmark_SyncPoolXoshiro256ssRNG_Uint64_Serial-8       68647528                35.0 ns/op             0 B/op          0 allocs/op
 Benchmark_SyncPoolUnsafeRandRNG_Uint64_Serial
-Benchmark_SyncPoolUnsafeRandRNG_Uint64_Serial-8         64933483                38.2 ns/op             0 B/op          0 allocs/op
+Benchmark_SyncPoolUnsafeRandRNG_Uint64_Serial-8         63221281                37.3 ns/op             0 B/op          0 allocs/op
 Benchmark_SyncPoolXoshiro256ssRNG_Uint64_Parallel
-Benchmark_SyncPoolXoshiro256ssRNG_Uint64_Parallel-8     287036188                8.27 ns/op            0 B/op          0 allocs/op
+Benchmark_SyncPoolXoshiro256ssRNG_Uint64_Parallel-8     291210572               10.2 ns/op             0 B/op          0 allocs/op
 Benchmark_SyncPoolUnsafeRandRNG_Uint64_Parallel
-Benchmark_SyncPoolUnsafeRandRNG_Uint64_Parallel-8       256129362                8.98 ns/op            0 B/op          0 allocs/op
+Benchmark_SyncPoolUnsafeRandRNG_Uint64_Parallel-8       265468694                8.87 ns/op            0 B/op          0 allocs/op
 Benchmark_Rand_Int31n_Serial
-Benchmark_Rand_Int31n_Serial-8                          136582843               17.2 ns/op             0 B/op          0 allocs/op
+Benchmark_Rand_Int31n_Serial-8                          137442118               17.6 ns/op             0 B/op          0 allocs/op
 Benchmark_Rand_Int31n_Parallel
-Benchmark_Rand_Int31n_Parallel-8                        24768492                94.4 ns/op             0 B/op          0 allocs/op
+Benchmark_Rand_Int31n_Parallel-8                        24767979                95.5 ns/op             0 B/op          0 allocs/op
 Benchmark_Rand_Uint64_Serial
-Benchmark_Rand_Uint64_Serial-8                          143517854               16.8 ns/op             0 B/op          0 allocs/op
+Benchmark_Rand_Uint64_Serial-8                          143346825               16.8 ns/op             0 B/op          0 allocs/op
 Benchmark_Rand_Uint64_Parallel
-Benchmark_Rand_Uint64_Parallel-8                        27301082                89.7 ns/op             0 B/op          0 allocs/op
+Benchmark_Rand_Uint64_Parallel-8                        26994104                89.0 ns/op             0 B/op          0 allocs/op
 Benchmark_SyncPoolBytes_Serial_64bytes
-Benchmark_SyncPoolBytes_Serial_64bytes-8                 2172235              1028 ns/op             288 B/op          4 allocs/op
+Benchmark_SyncPoolBytes_Serial_64bytes-8                 2385789              1019 ns/op             288 B/op          4 allocs/op
 Benchmark_SyncPoolBytes_Serial_1024bytes
-Benchmark_SyncPoolBytes_Serial_1024bytes-8               1000000              2241 ns/op            1248 B/op          4 allocs/op
+Benchmark_SyncPoolBytes_Serial_1024bytes-8               1000000              2216 ns/op            1248 B/op          4 allocs/op
 Benchmark_SyncPoolBytes_Parallel_1024bytes
-Benchmark_SyncPoolBytes_Parallel_1024bytes-8             4031023               643 ns/op            1024 B/op          1 allocs/op
+Benchmark_SyncPoolBytes_Parallel_1024bytes-8             4113847               587 ns/op            1024 B/op          1 allocs/op
 PASS
-ok      github.com/villenny/concurrency-go      54.163s
+ok      github.com/villenny/concurrency-go      51.672s
+
 ```
 
 ## Contact

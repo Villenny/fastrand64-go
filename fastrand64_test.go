@@ -67,7 +67,7 @@ func Test_SafeRNG_Read(t *testing.T) {
 }
 
 func Test_UnsafeXoshiro256ssRNG_UInt64(t *testing.T) {
-	rng := UnsafeXoshiro256ssRNG{s: [4]uint64{0x01d353e5f3993bb0, 0x7b9c0df6cb193b20, 0xfdfcaa91110765b6, 0xd2db341f10bb232e}}
+	rng := UnsafeXoshiro256ssRNG{s0: 0x01d353e5f3993bb0, s1: 0x7b9c0df6cb193b20, s2: 0xfdfcaa91110765b6, s3: 0xd2db341f10bb232e}
 	var r uint64
 
 	/* this should produce:

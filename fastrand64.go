@@ -116,7 +116,10 @@ func (r *ThreadsafePoolRNG) Uint32n(maxN int) uint32 {
 
 // It is unsafe to call UnsafeRNG methods from concurrent goroutines.
 type UnsafeXoshiro256ssRNG struct {
-	s [4]uint64
+	s0 uint64
+	s1 uint64
+	s2 uint64
+	s3 uint64
 }
 
 func rol64(x uint64, k uint64) uint64 {
@@ -133,26 +136,33 @@ func splitmix64(index uint64) uint64 {
 
 func (r *UnsafeXoshiro256ssRNG) Uint64() uint64 {
 	// See https://en.wikipedia.org/wiki/Xorshift
-	s := &r.s
-	result := rol64(s[1]*5, 7) * 9
-	t := s[1] << 17
+	result := rol64(r.s1*5, 7) * 9
+	t := r.s1 << 17
 
-	s[2] ^= s[0]
-	s[3] ^= s[1]
-	s[1] ^= s[2]
-	s[0] ^= s[3]
+	r.s2 ^= r.s0
+	r.s3 ^= r.s1
+	r.s1 ^= r.s2
+	r.s0 ^= r.s3
 
-	s[2] ^= t
-	s[3] = rol64(s[3], 45)
+	r.s2 ^= t
+	r.s3 = rol64(r.s3, 45)
 
 	return result
 }
 
 func (r *UnsafeXoshiro256ssRNG) Seed(seed int64) {
-	for i := 0; i < len(r.s); i++ {
-		for r.s[i] == 0 {
-			r.s[i] = splitmix64(uint64(seed) + uint64(i))
-		}
+	i := 0
+	for r.s0 = 0; r.s0 == 0; i++ {
+		r.s0 = splitmix64(uint64(seed) + uint64(i))
+	}
+	for r.s1 = 0; r.s1 == 0; i++ {
+		r.s1 = splitmix64(uint64(seed) + uint64(i))
+	}
+	for r.s2 = 0; r.s2 == 0; i++ {
+		r.s2 = splitmix64(uint64(seed) + uint64(i))
+	}
+	for r.s3 = 0; r.s3 == 0; i++ {
+		r.s3 = splitmix64(uint64(seed) + uint64(i))
 	}
 }
 

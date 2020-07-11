@@ -1,115 +1,104 @@
-[![GitHub issues](https://img.shields.io/github/issues/Villenny/concurrency-go)](https://github.com/Villenny/concurrency-go/issues)
-[![GitHub forks](https://img.shields.io/github/forks/Villenny/concurrency-go)](https://github.com/Villenny/concurrency-go/network)
-[![GitHub stars](https://img.shields.io/github/stars/Villenny/concurrency-go)](https://github.com/Villenny/concurrency-go/stargazers)
-[![GitHub license](https://img.shields.io/github/license/Villenny/concurrency-go)](https://github.com/Villenny/concurrency-go/blob/master/LICENSE)
-![Go](https://github.com/Villenny/concurrency-go/workflows/Go/badge.svg?branch=master)
-![Codecov branch](https://img.shields.io/codecov/c/github/villenny/concurrency-go/master)
+[![GitHub issues](https://img.shields.io/github/issues/Villenny/fastrand64-go)](https://github.com/Villenny/concurrency-go/issues)
+[![GitHub forks](https://img.shields.io/github/forks/Villenny/fastrand64-go)](https://github.com/Villenny/concurrency-go/network)
+[![GitHub stars](https://img.shields.io/github/stars/Villenny/fastrand64-go)](https://github.com/Villenny/concurrency-go/stargazers)
+[![GitHub license](https://img.shields.io/github/license/Villenny/fastrand64-go)](https://github.com/Villenny/concurrency-go/blob/master/LICENSE)
+![Go](https://github.com/Villenny/fastrand64-go/workflows/Go/badge.svg?branch=master)
+![Codecov branch](https://img.shields.io/codecov/c/github/villenny/fastrand64-go/master)
 
-# concurrency-go
-Helper library for effective concurrency in golang
+# fastrand64-go
+Helper library for full uint64 randomness, pool backed for efficient concurrency
+
+Inspired by https://github.com/valyala/fastrand which is faster, but not 64 bit.
 
 
 ## Install
 
 ```
-go get -u github.com/Villenny/concurrency-go
+go get -u github.com/Villenny/fastrand64-go
 ```
 
 ## Notable members:
-`ParallelForLimit()`, 
-`AtomicInt64`, 
-`Pool`
+`Xoshiro256ssRNG`, 
+`SyncPoolRNG`, 
 
-Using ParallelForLimit:
-- Quickly use all the cores to process an array of work.
+The expected use case:
+- If you are doing a lot of random indexing on a lot of cores
+```
+	import "github.com/villenny/fastrand64-go"
+
+	rng := NewSyncPoolXoshiro256ssRNG()
+
+	// somewhere later, in some goproc, one of lots, like a web request handler for example
+
+	r1 := rng.Uint32n(10)
+	r2 := rng.Uint64()
+	someBytes := rng.Bytes(256)
+```
+
+Using SyncPoolRNG:
+- I tried to keep everything safe for composition, this way you can use your own random generator if you have one
+- Note the pool uses the the builtin golang threadsafe uint64 rand function to generate seeds for each allocated generator in the pool.
 ```
 	import "github.com/villenny/concurrency-go"
 
-	results := make([]MyStruct, len(input))
+	// use the helper function to generate a system rand based source
+	rand.Seed(1)
+	rng := NewSyncPoolRNG(func() UnsafeRNG { return NewUnsafeRandRNG(int64(rand.Uint64())) })
 
-	ParallelForLimit(runtime.NumCPU(), len(input), func(n int) {
-		in := input[n]
-		results[n] = MyWorkFn(in)
-	})
-
+	// use some random thing that has a Uint64() function 	
+	rand.Seed(1)
+	rng := NewSyncPoolRNG(func() UnsafeRNG { return rand.New(rand.NewSource(rand.Uint64()).(rand.Source64)) })
+	
 ```
 
-Using AtomicInt64:
-- Supports json marshal/unmarshal implicitly, just like regular int64's
-- Automatically eliminates false sharing
-```
-	import "github.com/villenny/concurrency-go"
-
-	allocCount := NewAtomicInt64()
-	allocCount.Add(1)
-	bytes, _ := json.Marshal(&allocCount)
-	_ = json.Unmarshal(bytes, &allocCount)
-	itsOne := allocCount.Get()
-```
-
-Using the Pool:
-- Simplifies use by handling reset on put implicitly
-```
-import (
-	"github.com/villenny/concurrency-go"
-	"github.com/cespare/xxhash/v2"
-)
-
-var pool = concurrency.NewPool(&concurrency.PoolInfo{
-	New:   func() interface{} { return xxhash.New() },
-	Reset: func(t interface{}) { t.(*xxhash.Digest).Reset() },
-})
-
-func HashString(s string) uint64 {
-	digest := pool.Get().(*xxhash.Digest)
-	_, _ = digest.WriteString(s) // always returns len(s), nil
-	hash := digest.Sum64()
-	pool.Put(digest)
-	return hash
-}
-```
 
 ## Benchmark
 
-Assuming you never call go fn() inside your work function, ParallelForLimit() is pretty tough to beat assuming you're using it for batch processing which is its intended use case.
-
-Unfortunately without the ability to do something along the lines of go thiscore fn(), theres no way to do this optimally if you have asynchronous calls in your work function.
-
-And while its easy to use, you absolutely can beat it, by feeding your input into one disruptor per long lived goroutine so each has totally independent in order circular array buffers with zero contention.
+- Xoshiro256ss is roughly 25% faster than whatever golang uses natively
+- The Pool wrapped version of Xoshiro is roughly half as fast as the native threadsafe golang random generator
+- BUT, the pool wrapped Xoshiro murders the native in a multicore environment where there would otherwise be lots of contention. 4X faster on my 4 core machine in the pathological case of every core doing nothing but generate random numbers.
+- It would probably be faster still (although I havent tested this) to feed echo goproc its own unsafe generator in their context and not use the pool.
 
 ```
-Running tool: C:\Go\bin\go.exe test -benchmem -run=^$ github.com/villenny/concurrency-go -bench .
-
 goos: windows
 goarch: amd64
 pkg: github.com/villenny/concurrency-go
-BenchmarkFor_InlineFor_SQRT-8                   	231453978	         5.42 ns/op	       0 B/op	       0 allocs/op
-BenchmarkFor_SerialFor_SQRT-8                   	327313581	         4.06 ns/op	       0 B/op	       0 allocs/op
-BenchmarkFor_InlineFor_SQRT2-8                  	353307472	         3.54 ns/op	       0 B/op	       0 allocs/op
-BenchmarkFor_ParallelForLimit_SQRT_1-8          	326426421	         3.51 ns/op	       0 B/op	       0 allocs/op
-BenchmarkFor_ParallelForLimit_SQRT_2-8          	556136150	         2.87 ns/op	       0 B/op	       0 allocs/op
-BenchmarkFor_ParallelForLimit_SQRT_4-8          	704042665	        10.3 ns/op	       0 B/op	       0 allocs/op
-BenchmarkFor_ParallelForLimit_SQRT_8-8          	751173544	        11.4 ns/op	       0 B/op	       0 allocs/op
-BenchmarkFor_ParallelForLimit_SQRT_16-8         	200899519	         7.09 ns/op	       0 B/op	       0 allocs/op
-BenchmarkFor_ParallelFor_SQRT-8                 	 5315282	       230 ns/op	       0 B/op	       0 allocs/op
-BenchmarkFor_SerialFor_SHA256-8                 	 1696674	       702 ns/op	      32 B/op	       1 allocs/op
-BenchmarkFor_ParallelForLimit_SHA256-8          	 5976416	       205 ns/op	      32 B/op	       1 allocs/op
-BenchmarkInt64_Add-8                            	188578995	         6.10 ns/op	       0 B/op	       0 allocs/op
-BenchmarkInt64_Get-8                            	552139134	         2.18 ns/op	       8 B/op	       0 allocs/op
-BenchmarkSafeInt64_Add-8                        	 7507633	       160 ns/op	       0 B/op	       0 allocs/op
-BenchmarkSafeInt64_Get-8                        	28602208	        35.8 ns/op	       0 B/op	       0 allocs/op
-BenchmarkAtomicInt64_Add-8                      	75078831	        16.0 ns/op	       0 B/op	       0 allocs/op
-BenchmarkAtomicInt64_Get-8                      	1000000000	         1.53 ns/op	       0 B/op	       0 allocs/op
-Benchmark_Inc500x2_SafeInt64-8                  	   10000	    114481 ns/op	     491 B/op	       1 allocs/op
-Benchmark_Get500x2_Int64-8                      	 3048847	       391 ns/op	      31 B/op	       0 allocs/op
-Benchmark_Get500x2_SafeInt64-8                  	   58312	     23007 ns/op	       0 B/op	       0 allocs/op
-Benchmark_Inc500x2_AtomicInt64-8                	  138075	      8581 ns/op	       0 B/op	       0 allocs/op
-Benchmark_Get500x2_AtomicInt64-8                	 1568206	       766 ns/op	      50 B/op	       0 allocs/op
-Benchmark_Inc500x2_RawAtomic_falseSharing-8     	   55357	     21456 ns/op	       0 B/op	       0 allocs/op
-Benchmark_Inc500x2_RawAtomic_noFalseSharing-8   	  138074	      8711 ns/op	       0 B/op	       0 allocs/op
-Benchmark_Inc500x2_Int64_noFalseSharing-8       	  266944	      4558 ns/op	       0 B/op	       0 allocs/op
+Benchmark_UnsafeXoshiro256ssRNG
+Benchmark_UnsafeXoshiro256ssRNG-8                       425218730                5.76 ns/op            0 B/op          0 allocs/op
+Benchmark_UnsafeRandRNG
+Benchmark_UnsafeRandRNG-8                               336958443                7.31 ns/op            0 B/op          0 allocs/op
+Benchmark_FastModulo
+Benchmark_FastModulo-8                                  325541452                7.45 ns/op            0 B/op          0 allocs/op
+Benchmark_Modulo
+Benchmark_Modulo-8                                      298817056                8.11 ns/op            0 B/op          0 allocs/op
+Benchmark_SyncPoolXoshiro256ssRNG_Uint32n_Serial
+Benchmark_SyncPoolXoshiro256ssRNG_Uint32n_Serial-8      67347566                35.4 ns/op             0 B/op          0 allocs/op
+Benchmark_SyncPoolXoshiro256ssRNG_Uint32n_Parallel
+Benchmark_SyncPoolXoshiro256ssRNG_Uint32n_Parallel-8    286351929                8.98 ns/op            0 B/op          0 allocs/op
+Benchmark_SyncPoolXoshiro256ssRNG_Uint64_Serial
+Benchmark_SyncPoolXoshiro256ssRNG_Uint64_Serial-8       68643208                34.9 ns/op             0 B/op          0 allocs/op
+Benchmark_SyncPoolUnsafeRandRNG_Uint64_Serial
+Benchmark_SyncPoolUnsafeRandRNG_Uint64_Serial-8         64933483                38.2 ns/op             0 B/op          0 allocs/op
+Benchmark_SyncPoolXoshiro256ssRNG_Uint64_Parallel
+Benchmark_SyncPoolXoshiro256ssRNG_Uint64_Parallel-8     287036188                8.27 ns/op            0 B/op          0 allocs/op
+Benchmark_SyncPoolUnsafeRandRNG_Uint64_Parallel
+Benchmark_SyncPoolUnsafeRandRNG_Uint64_Parallel-8       256129362                8.98 ns/op            0 B/op          0 allocs/op
+Benchmark_Rand_Int31n_Serial
+Benchmark_Rand_Int31n_Serial-8                          136582843               17.2 ns/op             0 B/op          0 allocs/op
+Benchmark_Rand_Int31n_Parallel
+Benchmark_Rand_Int31n_Parallel-8                        24768492                94.4 ns/op             0 B/op          0 allocs/op
+Benchmark_Rand_Uint64_Serial
+Benchmark_Rand_Uint64_Serial-8                          143517854               16.8 ns/op             0 B/op          0 allocs/op
+Benchmark_Rand_Uint64_Parallel
+Benchmark_Rand_Uint64_Parallel-8                        27301082                89.7 ns/op             0 B/op          0 allocs/op
+Benchmark_SyncPoolBytes_Serial_64bytes
+Benchmark_SyncPoolBytes_Serial_64bytes-8                 2172235              1028 ns/op             288 B/op          4 allocs/op
+Benchmark_SyncPoolBytes_Serial_1024bytes
+Benchmark_SyncPoolBytes_Serial_1024bytes-8               1000000              2241 ns/op            1248 B/op          4 allocs/op
+Benchmark_SyncPoolBytes_Parallel_1024bytes
+Benchmark_SyncPoolBytes_Parallel_1024bytes-8             4031023               643 ns/op            1024 B/op          1 allocs/op
 PASS
-ok  	github.com/villenny/concurrency-go	89.611s
+ok      github.com/villenny/concurrency-go      54.163s
 ```
 
 ## Contact

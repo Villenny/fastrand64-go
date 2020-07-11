@@ -57,7 +57,7 @@ Using SyncPoolRNG:
 - Xoshiro256ss is roughly 25% faster than whatever golang uses natively
 - The Pool wrapped version of Xoshiro is roughly half as fast as the native threadsafe golang random generator
 - BUT, the pool wrapped Xoshiro murders the native in a multicore environment where there would otherwise be lots of contention. 4X faster on my 4 core machine in the pathological case of every core doing nothing but generate random numbers.
-- It would probably be faster still (although I havent tested this) to feed echo goproc its own unsafe generator in their context and not use the pool.
+- It would probably be faster still (although I havent tested this) to feed each goproc its own unsafe generator in their context arg and not use the pool.
 
 ```
 goos: windows

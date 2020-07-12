@@ -8,6 +8,8 @@ github.com/stretchr/testify v1.5.1 h1:nOGnQDM7FYENwehXlg/kFVnos3rEvtKTjRvOWSzb6H
 github.com/stretchr/testify v1.5.1/go.mod h1:5W2xD1RspED5o8YsWQXVCued0rvSQ+mT+I5cxcmMvtA=
 github.com/tsuna/endian v0.0.0-20151020052604-29b3a4178852 h1:/HMzghBx/U8ZTQ+CCKRAsjeNNV12OCG3PfJcthNMBU0=
 github.com/tsuna/endian v0.0.0-20151020052604-29b3a4178852/go.mod h1:7SvkOZYNBtjd5XUi2fuPMvAZS8rlCMaU69hj/3joIsE=
+github.com/valyala/fastrand v1.0.0 h1:LUKT9aKer2dVQNUi3waewTbKV+7H17kvWFNKs2ObdkI=
+github.com/valyala/fastrand v1.0.0/go.mod h1:HWqCzkrkg6QXT8V2EXWvXCoow7vLwOFN002oeRzjapQ=
 github.com/yalue/native_endian v0.0.0-20180607135909-51013b03be4f h1:nsQCScpQ8RRf+wIooqfyyEUINV2cAPuo2uVtHSBbA4M=
 github.com/yalue/native_endian v0.0.0-20180607135909-51013b03be4f/go.mod h1:1cm5YQZdnDQBZVtFG2Ip8sFVN0eYZ8OFkCT2kIVl9mw=
 gopkg.in/check.v1 v0.0.0-20161208181325-20d25e280405/go.mod h1:Co6ibVJAznAaIkqp8huTwlJQCZ016jof/cbN4VW5Yz0=

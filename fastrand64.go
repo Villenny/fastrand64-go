@@ -1,4 +1,4 @@
-// Package fastrand implements fast pesudorandom number generator
+// Package fastrand64 implements fast pesudorandom number generator
 // that should scale well on multi-CPU systems.
 //
 // Use crypto/rand instead of this package for generating

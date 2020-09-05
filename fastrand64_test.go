@@ -107,7 +107,7 @@ func Test_NewUnsafeRandRNG_UInt64(t *testing.T) {
 //
 //    E X A M P L E S
 
-func Example() {
+func ExampleNewSyncPoolXoshiro256ssRNG() {
 	// import "github.com/villenny/fastrand64-go"
 
 	// make a threadsafe random generator
@@ -117,9 +117,9 @@ func Example() {
 	// this (ab)uses a sync.Pool to allocate one generator per thread
 	r1 := rng.Uint32n(10)
 	r2 := rng.Uint64()
-	someBytes := rng.Bytes(256)
+	someBytes := rng.Bytes(8)
 
-	// behold randomness
+	// This will produce R1=<random int 0-9>, R2=<random unsigned 64bit int>, someBytes=<random bytes>
 	fmt.Printf("R1=%v, R2=%v, someBytes=%v", r1, r2, someBytes)
 }
 

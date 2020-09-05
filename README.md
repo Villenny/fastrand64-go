@@ -4,6 +4,8 @@
 [![GitHub license](https://img.shields.io/github/license/Villenny/fastrand64-go)](https://github.com/Villenny/fastrand64-go/blob/master/LICENSE)
 ![Go](https://github.com/Villenny/fastrand64-go/workflows/Go/badge.svg?branch=master)
 ![Codecov branch](https://img.shields.io/codecov/c/github/villenny/fastrand64-go/master)
+[![Go Report Card](https://goreportcard.com/badge/github.com/Villenny/fastrand64-go)](https://goreportcard.com/report/github.com/Villenny/fastrand64-go)
+[![Documentation](https://godoc.org/github.com/Villenny/fastrand64-go?status.svg)](http://godoc.org/github.com/Villenny/fastrand64-go)
 
 # fastrand64-go
 Helper library for full uint64 randomness, pool backed for efficient concurrency
@@ -18,8 +20,8 @@ go get -u github.com/Villenny/fastrand64-go
 ```
 
 ## Notable members:
-`Xoshiro256ssRNG`, 
-`SyncPoolRNG`, 
+`Xoshiro256ssRNG`,
+`SyncPoolRNG`,
 
 The expected use case:
 - If you are doing a lot of random indexing on a lot of cores
@@ -45,10 +47,10 @@ Using SyncPoolRNG:
 	rand.Seed(1)
 	rng := NewSyncPoolRNG(func() UnsafeRNG { return NewUnsafeRandRNG(int64(rand.Uint64())) })
 
-	// use some random thing that has a Uint64() function 	
+	// use some random thing that has a Uint64() function
 	rand.Seed(1)
 	rng := NewSyncPoolRNG(func() UnsafeRNG { return rand.New(rand.NewSource(rand.Uint64()).(rand.Source64)) })
-	
+
 ```
 
 

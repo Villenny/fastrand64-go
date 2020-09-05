@@ -11,20 +11,25 @@ import (
 	"time"
 )
 
+// ThreadsafePoolRNG core type for the pool backed threadsafe RNG
 type ThreadsafePoolRNG struct {
 	rngPool sync.Pool
 }
 
+// UnsafeRNG is the interface for an unsafe RNG used by the Pool RNG as a source of randomness
 type UnsafeRNG interface {
 	Uint64() uint64
 }
 
+// Wraps a sync.Pool around a thread unsafe RNG, thus making it efficiently thread safe
 func NewSyncPoolRNG(fn func() UnsafeRNG) *ThreadsafePoolRNG {
 	s := &ThreadsafePoolRNG{}
 	s.rngPool = sync.Pool{New: func() interface{} { return fn() }}
 	return s
 }
 
+// NewSyncPoolXoshiro256ssRNG conveniently allocations a thread safe pooled back xoshiro256** generator
+// this uses NewSyncPoolRNG internally
 func NewSyncPoolXoshiro256ssRNG() *ThreadsafePoolRNG {
 	rand.Seed(time.Now().UnixNano())
 	return NewSyncPoolRNG(func() UnsafeRNG {
@@ -40,17 +45,19 @@ func (s *ThreadsafePoolRNG) Uint64() uint64 {
 	return x
 }
 
-// should only be used to match Source64 interface
+// Int63 is here to match Source64 interface, why not call Int64
 func (s *ThreadsafePoolRNG) Int63() int64 {
 	return int64(0x7FFFFFFFFFFFFFFF & s.Uint64())
 }
 
-// should only be used to match Source64 interface
+// Seed is only here to match the golang std libs Source64 interface
 func (s *ThreadsafePoolRNG) Seed(seed int64) {
 	// you cant really seed a PoolRNG, since the call order is non-determinate
 	panic("Cant seed a ThreadsafePoolRNG")
 }
 
+// Bytes allocates a []byte filled with random bytes and returns it. This is convenient
+// but caller does the allocation pattern is better way since it can reduce allocation count/GC
 func (s *ThreadsafePoolRNG) Bytes(n int) []byte {
 	r := s.rngPool.Get().(UnsafeRNG)
 	bytes := make([]byte, n)
@@ -59,6 +66,7 @@ func (s *ThreadsafePoolRNG) Bytes(n int) []byte {
 	return result
 }
 
+// Read fills a []byte array with random bytes from a thread safe pool backed RNG
 func (s *ThreadsafePoolRNG) Read(p []byte) []byte {
 	r := s.rngPool.Get().(UnsafeRNG)
 	Bytes(r, p)
@@ -66,6 +74,7 @@ func (s *ThreadsafePoolRNG) Read(p []byte) []byte {
 	return p
 }
 
+// Bytes fills a []byte array with random bytes from a thread unsafe RNG
 func Bytes(r UnsafeRNG, bytes []byte) []byte {
 	n := len(bytes)
 	bytesToGo := n
@@ -126,7 +135,9 @@ func rol64(x uint64, k uint64) uint64 {
 	return (x << k) | (x >> (64 - k))
 }
 
-func splitmix64(index uint64) uint64 {
+// Splitmix64 is typically used to convert a potentially zero seed, into better non-zero seeds
+// ie seeding a stronger RNG
+func Splitmix64(index uint64) uint64 {
 	z := (index + uint64(0x9E3779B97F4A7C15))
 	z = (z ^ (z >> 30)) * uint64(0xBF58476D1CE4E5B9)
 	z = (z ^ (z >> 27)) * uint64(0x94D049BB133111EB)
@@ -134,6 +145,7 @@ func splitmix64(index uint64) uint64 {
 	return z
 }
 
+// Uint64 generates a random Uin64, (not thread safe)
 func (r *UnsafeXoshiro256ssRNG) Uint64() uint64 {
 	// See https://en.wikipedia.org/wiki/Xorshift
 	result := rol64(r.s1*5, 7) * 9
@@ -150,29 +162,32 @@ func (r *UnsafeXoshiro256ssRNG) Uint64() uint64 {
 	return result
 }
 
+// Seed takes a single uint64 and runs it through splitmix64 to seed the 256 bit starting state for the RNG
 func (r *UnsafeXoshiro256ssRNG) Seed(seed int64) {
 	i := 0
 	for r.s0 = 0; r.s0 == 0; i++ {
-		r.s0 = splitmix64(uint64(seed) + uint64(i))
+		r.s0 = Splitmix64(uint64(seed) + uint64(i))
 	}
 	for r.s1 = 0; r.s1 == 0; i++ {
-		r.s1 = splitmix64(uint64(seed) + uint64(i))
+		r.s1 = Splitmix64(uint64(seed) + uint64(i))
 	}
 	for r.s2 = 0; r.s2 == 0; i++ {
-		r.s2 = splitmix64(uint64(seed) + uint64(i))
+		r.s2 = Splitmix64(uint64(seed) + uint64(i))
 	}
 	for r.s3 = 0; r.s3 == 0; i++ {
-		r.s3 = splitmix64(uint64(seed) + uint64(i))
+		r.s3 = Splitmix64(uint64(seed) + uint64(i))
 	}
 }
 
-// Thread unsafe PRNG
+// NewUnsafeXoshiro256ssRNG creates a new Thread unsafe PRNG generator
 func NewUnsafeXoshiro256ssRNG(seed int64) *UnsafeXoshiro256ssRNG {
 	r := &UnsafeXoshiro256ssRNG{}
 	r.Seed(seed)
 	return r
 }
 
+// NewUnsafeRandRNG creates a new Thread unsafe PRNG generator using the native golang 64bit RNG generator
+// (thus avoiding using any global state)
 func NewUnsafeRandRNG(seed int64) *rand.Rand {
 	return rand.New(rand.NewSource(seed).(rand.Source64))
 }

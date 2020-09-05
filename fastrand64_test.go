@@ -126,23 +126,32 @@ func Benchmark_UnsafeRandRNG(b *testing.B) {
 	BenchSink = &r
 }
 
+func Benchmark_UnsafePcg32RNG(b *testing.B) {
+	rng := NewUnsafePcg32RNG(time.Now().UnixNano())
+	var r uint32
+	for i := 0; i < b.N; i++ {
+		r = rng.Uint32()
+	}
+	BenchSink = &r
+}
+
 func Benchmark_FastModulo(b *testing.B) {
-	maxN := 10
+	maxN := uint64(10)
 	rng := NewUnsafeRandRNG(time.Now().UnixNano())
 	var r uint32
 	for i := 0; i < b.N; i++ {
 		x := rng.Uint64() & 0x00000000FFFFFFFF
-		r = uint32((x * uint64(maxN)) >> 32)
+		r = uint32((x * (maxN)) >> 32)
 	}
 	BenchSink = &r
 }
 
 func Benchmark_Modulo(b *testing.B) {
-	maxN := 10
+	maxN := uint64(10)
 	rng := NewUnsafeRandRNG(time.Now().UnixNano())
 	var r uint32
 	for i := 0; i < b.N; i++ {
-		r = uint32(rng.Uint64() % uint64(maxN))
+		r = uint32(rng.Uint64() % (maxN))
 	}
 	BenchSink = &r
 }

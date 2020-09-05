@@ -37,7 +37,7 @@ type UnsafeRNG interface {
 	Uint64() uint64
 }
 
-// Wraps a sync.Pool around a thread unsafe RNG, thus making it efficiently thread safe
+// NewSyncPoolRNG Wraps a sync.Pool around a thread unsafe RNG, thus making it efficiently thread safe
 func NewSyncPoolRNG(fn func() UnsafeRNG) *ThreadsafePoolRNG {
 	s := &ThreadsafePoolRNG{}
 	s.rngPool = sync.Pool{New: func() interface{} { return fn() }}
@@ -129,17 +129,19 @@ func Bytes(r UnsafeRNG, bytes []byte) []byte {
 // Uint32n returns pseudorandom Uint32n in the range [0..maxN).
 //
 // It is safe calling this function from concurrent goroutines.
-func (r *ThreadsafePoolRNG) Uint32n(maxN int) uint32 {
-	x := r.Uint64() & 0x00000000FFFFFFFF
+func (s *ThreadsafePoolRNG) Uint32n(maxN int) uint32 {
+	x := s.Uint64() & 0x00000000FFFFFFFF
 	// See http://lemire.me/blog/2016/06/27/a-fast-alternative-to-the-modulo-reduction/
 	return uint32((x * uint64(maxN)) >> 32)
 }
 
+// UnsafeXoshiro256ssRNG It is unsafe to call UnsafeRNG methods from concurrent goroutines.
+//
 // UnsafeXoshiro256** is a pseudorandom number generator.
 // For an interesting commentary on xoshiro256**
 // https://www.pcg-random.org/posts/a-quick-look-at-xoshiro256.html
-
-// It is unsafe to call UnsafeRNG methods from concurrent goroutines.
+//
+// It is however very fast, and strong enough for most practical purposes
 type UnsafeXoshiro256ssRNG struct {
 	s0 uint64
 	s1 uint64

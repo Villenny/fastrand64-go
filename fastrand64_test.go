@@ -3,7 +3,6 @@ package fastrand64
 import (
 	"bytes"
 	"encoding/binary"
-	"fmt"
 	"math/rand"
 	"testing"
 	"time"
@@ -101,26 +100,6 @@ func Test_NewUnsafeRandRNG_UInt64(t *testing.T) {
 	rng := NewUnsafeRandRNG(1)
 	r := rng.Uint64()
 	assert.Equal(t, rand.New(rand.NewSource(1).(rand.Source64)).Uint64(), r)
-}
-
-// ///////////////////////////////////////////////////////////////////////////
-//
-//    E X A M P L E S
-
-func ExampleNewSyncPoolXoshiro256ssRNG() {
-	// import "github.com/villenny/fastrand64-go"
-
-	// make a threadsafe random generator
-	rng := NewSyncPoolXoshiro256ssRNG()
-
-	// somewhere later, in some goproc, one of lots, like a web request handler for example
-	// this (ab)uses a sync.Pool to allocate one generator per thread
-	r1 := rng.Uint32n(10)
-	r2 := rng.Uint64()
-	someBytes := rng.Bytes(8)
-
-	// This will produce R1=<random int 0-9>, R2=<random unsigned 64bit int>, someBytes=<random bytes>
-	fmt.Printf("R1=%v, R2=%v, someBytes=%v", r1, r2, someBytes)
 }
 
 // ///////////////////////////////////////////////////////////////////////////

@@ -1,4 +1,4 @@
-module github.com/villenny/concurrency-go
+module github.com/villenny/fastrand64-go
 
 go 1.14
 

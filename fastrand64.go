@@ -93,14 +93,33 @@ func (s *ThreadsafePoolRNG) Read(p []byte) []byte {
 // Bytes fills a []byte array with random bytes from a thread unsafe RNG
 func Bytes(r UnsafeRNG, bytes []byte) []byte {
 	n := len(bytes)
-	bytesToGo := n
-	i := 0
 
+	/*
+		header := (*reflect.SliceHeader)(unsafe.Pointer(&bytes))
+		ptr := (*uint64)(unsafe.Pointer(header.Data))
+		offsetMax := uintptr(n - (n % 8))
+		ptrMax := (*uint64)(unsafe.Pointer(header.Data + offsetMax))
+
+		for {
+			if ptr == ptrMax {
+				break
+			}
+			x := r.Uint64()
+			*ptr = x
+			ptr = (*uint64)(unsafe.Pointer((uintptr)(unsafe.Pointer(ptr)) + 8))
+		}
+
+		i := int(offsetMax)
+	*/
+
+	i := 0
+	iMax := n - (n % 8)
 	for {
-		if bytesToGo < 8 {
+		if i == iMax {
 			break
 		}
 		x := r.Uint64()
+
 		bytes[i] = byte(x)
 		bytes[i+1] = byte(x >> 8)
 		bytes[i+2] = byte(x >> 16)
@@ -110,7 +129,6 @@ func Bytes(r UnsafeRNG, bytes []byte) []byte {
 		bytes[i+6] = byte(x >> 48)
 		bytes[i+7] = byte(x >> 56)
 		i += 8
-		bytesToGo -= 8
 	}
 
 	x := r.Uint64()

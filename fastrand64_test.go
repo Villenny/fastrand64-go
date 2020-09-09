@@ -286,6 +286,14 @@ func Benchmark_SyncPoolBytes_Serial_1024bytes(b *testing.B) {
 	}
 }
 
+func Benchmark_SyncPoolBytes_Serial_1Mbytes(b *testing.B) {
+	rng := NewSyncPoolXoshiro256ssRNG()
+	for i := 0; i < b.N; i++ {
+		bytes := rng.Bytes(1024 * 1024)
+		assert.Equal(b, 1024*1024, len(bytes))
+	}
+}
+
 func Benchmark_SyncPoolBytes_Parallel_1024bytes(b *testing.B) {
 	rng := NewSyncPoolXoshiro256ssRNG()
 	b.RunParallel(func(pb *testing.PB) {

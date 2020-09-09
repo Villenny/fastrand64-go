@@ -1,8 +1,12 @@
 package fastrand64
 
 import (
+	"reflect"
 	"testing"
 	"time"
+	"unsafe"
+
+	"github.com/stretchr/testify/assert"
 )
 
 type UnsafePcg32RNG struct {
@@ -141,3 +145,16 @@ PASS
 ok  	github.com/villenny/concurrency-go	3.550s
 
 */
+
+func Test_UnsafeCast(t *testing.T) {
+	var i uint64 = 1
+	b := make([]byte, 16)
+
+	header := (*reflect.SliceHeader)(unsafe.Pointer(&b))
+	ptr := (*uint64)(unsafe.Pointer(header.Data))
+
+	ptr = (*uint64)(unsafe.Pointer((uintptr)(unsafe.Pointer(ptr)) + 8))
+	*ptr = i
+
+	assert.Equal(t, []byte{0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0}, b)
+}

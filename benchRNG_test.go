@@ -114,6 +114,34 @@ func NewUnsafeJsf64RNG(seed int64) *UnsafeJsf64RNG {
 	return r
 }
 
+func Test_UnsafeCast(t *testing.T) {
+	var i uint64 = 1
+	b := make([]byte, 16)
+
+	header := (*reflect.SliceHeader)(unsafe.Pointer(&b))
+	ptr := (*uint64)(unsafe.Pointer(header.Data))
+
+	ptr = (*uint64)(unsafe.Pointer((uintptr)(unsafe.Pointer(ptr)) + 8))
+	*ptr = i
+
+	assert.Equal(t, []byte{0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0}, b)
+}
+
+// ////////////////////////////////////////////////////////////////
+
+/*
+
+Running tool: C:\Go\bin\go.exe test -benchmem -run=^$ github.com/villenny/concurrency-go -bench ^(Benchmark_UnsafePcg32x2RNG|Benchmark_UnsafeJsf64RNG)$
+
+goos: windows
+goarch: amd64
+pkg: github.com/villenny/concurrency-go
+Benchmark_UnsafePcg32x2RNG-8   	223279117	         5.28 ns/op	       0 B/op	       0 allocs/op
+Benchmark_UnsafeJsf64RNG-8     	295147552	         4.10 ns/op	       0 B/op	       0 allocs/op
+PASS
+ok  	github.com/villenny/concurrency-go	3.550s
+
+*/
 func Benchmark_UnsafePcg32x2RNG(b *testing.B) {
 	rng := NewUnsafePcg32x2RNG(time.Now().UnixNano())
 	var r uint64
@@ -130,31 +158,4 @@ func Benchmark_UnsafeJsf64RNG(b *testing.B) {
 		r = rng.Uint64()
 	}
 	BenchSink = &r
-}
-
-/*
-
-Running tool: C:\Go\bin\go.exe test -benchmem -run=^$ github.com/villenny/concurrency-go -bench ^(Benchmark_UnsafePcg32x2RNG|Benchmark_UnsafeJsf64RNG)$
-
-goos: windows
-goarch: amd64
-pkg: github.com/villenny/concurrency-go
-Benchmark_UnsafePcg32x2RNG-8   	223279117	         5.28 ns/op	       0 B/op	       0 allocs/op
-Benchmark_UnsafeJsf64RNG-8     	295147552	         4.10 ns/op	       0 B/op	       0 allocs/op
-PASS
-ok  	github.com/villenny/concurrency-go	3.550s
-
-*/
-
-func Test_UnsafeCast(t *testing.T) {
-	var i uint64 = 1
-	b := make([]byte, 16)
-
-	header := (*reflect.SliceHeader)(unsafe.Pointer(&b))
-	ptr := (*uint64)(unsafe.Pointer(header.Data))
-
-	ptr = (*uint64)(unsafe.Pointer((uintptr)(unsafe.Pointer(ptr)) + 8))
-	*ptr = i
-
-	assert.Equal(t, []byte{0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0}, b)
 }

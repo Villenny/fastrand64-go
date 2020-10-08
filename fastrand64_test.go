@@ -272,26 +272,29 @@ func Benchmark_Rand_Uint64_Parallel(b *testing.B) {
 
 func Benchmark_SyncPoolBytes_Serial_64bytes(b *testing.B) {
 	rng := NewSyncPoolXoshiro256ssRNG()
+	var bytes []byte
 	for i := 0; i < b.N; i++ {
-		bytes := rng.Bytes(64)
-		assert.Equal(b, 64, len(bytes))
+		bytes = rng.Bytes(64)
 	}
+	assert.Equal(b, 64, len(bytes))
 }
 
 func Benchmark_SyncPoolBytes_Serial_1024bytes(b *testing.B) {
 	rng := NewSyncPoolXoshiro256ssRNG()
+	var bytes []byte
 	for i := 0; i < b.N; i++ {
-		bytes := rng.Bytes(1024)
-		assert.Equal(b, 1024, len(bytes))
+		bytes = rng.Bytes(1024)
 	}
+	assert.Equal(b, 1024, len(bytes))
 }
 
 func Benchmark_SyncPoolBytes_Serial_1Mbytes(b *testing.B) {
 	rng := NewSyncPoolXoshiro256ssRNG()
+	var bytes []byte
 	for i := 0; i < b.N; i++ {
-		bytes := rng.Bytes(1024 * 1024)
-		assert.Equal(b, 1024*1024, len(bytes))
+		bytes = rng.Bytes(1024 * 1024)
 	}
+	assert.Equal(b, 1024*1024, len(bytes))
 }
 
 func Benchmark_SyncPoolBytes_Parallel_1024bytes(b *testing.B) {
@@ -308,45 +311,28 @@ func Benchmark_SyncPoolBytes_Parallel_1024bytes(b *testing.B) {
 /*
 goos: windows
 goarch: amd64
-pkg: github.com/villenny/concurrency-go
-Benchmark_UnsafeXoshiro256ssRNG
-Benchmark_UnsafeXoshiro256ssRNG-8                       886575583                2.65 ns/op            0 B/op          0 allocs/op
-Benchmark_UnsafeRandRNG
-Benchmark_UnsafeRandRNG-8                               331377972                7.34 ns/op            0 B/op          0 allocs/op
-Benchmark_FastModulo
-Benchmark_FastModulo-8                                  321618081                7.49 ns/op            0 B/op          0 allocs/op
-Benchmark_Modulo
-Benchmark_Modulo-8                                      290857617                8.18 ns/op            0 B/op          0 allocs/op
-Benchmark_SyncPoolXoshiro256ssRNG_Uint32n_Serial
-Benchmark_SyncPoolXoshiro256ssRNG_Uint32n_Serial-8      66759944                35.4 ns/op             0 B/op          0 allocs/op
-Benchmark_SyncPoolXoshiro256ssRNG_Uint32n_Parallel
-Benchmark_SyncPoolXoshiro256ssRNG_Uint32n_Parallel-8    283647373                8.68 ns/op            0 B/op          0 allocs/op
-Benchmark_SyncPoolXoshiro256ssRNG_Uint64_Serial
-Benchmark_SyncPoolXoshiro256ssRNG_Uint64_Serial-8       68642816                35.0 ns/op             0 B/op          0 allocs/op
-Benchmark_SyncPoolUnsafeRandRNG_Uint64_Serial
-Benchmark_SyncPoolUnsafeRandRNG_Uint64_Serial-8         64929618                37.9 ns/op             0 B/op          0 allocs/op
-Benchmark_SyncPoolXoshiro256ssRNG_Uint64_Parallel
-Benchmark_SyncPoolXoshiro256ssRNG_Uint64_Parallel-8     276466162                8.75 ns/op            0 B/op          0 allocs/op
-Benchmark_SyncPoolUnsafeRandRNG_Uint64_Parallel
-Benchmark_SyncPoolUnsafeRandRNG_Uint64_Parallel-8       263430684                8.87 ns/op            0 B/op          0 allocs/op
-Benchmark_Rand_Int31n_Serial
-Benchmark_Rand_Int31n_Serial-8                          140250397               17.3 ns/op             0 B/op          0 allocs/op
-Benchmark_Rand_Int31n_Parallel
-Benchmark_Rand_Int31n_Parallel-8                        24767929                94.8 ns/op             0 B/op          0 allocs/op
-Benchmark_ValyalaFastrand_Int31n_Serial
-Benchmark_ValyalaFastrand_Int31n_Serial-8               100000000               24.5 ns/op             0 B/op          0 allocs/op
-Benchmark_ValyalaFastrand_Int31n_Parallel
-Benchmark_ValyalaFastrand_Int31n_Parallel-8             340295736                8.60 ns/op            0 B/op          0 allocs/op
-Benchmark_Rand_Uint64_Serial
-Benchmark_Rand_Uint64_Serial-8                          160272944               14.8 ns/op             0 B/op          0 allocs/op
-Benchmark_Rand_Uint64_Parallel
-Benchmark_Rand_Uint64_Parallel-8                        26694428                88.7 ns/op             0 B/op          0 allocs/op
-Benchmark_SyncPoolBytes_Serial_64bytes
-Benchmark_SyncPoolBytes_Serial_64bytes-8                 2222467              1069 ns/op             288 B/op          4 allocs/op
-Benchmark_SyncPoolBytes_Serial_1024bytes
-Benchmark_SyncPoolBytes_Serial_1024bytes-8               1000000              2248 ns/op            1248 B/op          4 allocs/op
-Benchmark_SyncPoolBytes_Parallel_1024bytes
-Benchmark_SyncPoolBytes_Parallel_1024bytes-8             4044595               543 ns/op            1024 B/op          1 allocs/op
+pkg: github.com/villenny/fastrand64-go
+Benchmark_UnsafeXoshiro256ssRNG-8                      	455017189	         2.68 ns/op	       0 B/op	       0 allocs/op
+Benchmark_UnsafeRandRNG-8                              	157644103	         7.52 ns/op	       0 B/op	       0 allocs/op
+Benchmark_UnsafePcg32RNG-8                             	553564772	         2.24 ns/op	       0 B/op	       0 allocs/op
+Benchmark_FastModulo-8                                 	162549952	         7.43 ns/op	       0 B/op	       0 allocs/op
+Benchmark_Modulo-8                                     	150343704	         7.79 ns/op	       0 B/op	       0 allocs/op
+Benchmark_SyncPoolXoshiro256ssRNG_Uint32n_Serial-8     	35329238	        34.5 ns/op	       0 B/op	       0 allocs/op
+Benchmark_SyncPoolXoshiro256ssRNG_Uint32n_Parallel-8   	147113551	         8.37 ns/op	       0 B/op	       0 allocs/op
+Benchmark_SyncPoolXoshiro256ssRNG_Uint64_Serial-8      	34326316	        33.8 ns/op	       0 B/op	       0 allocs/op
+Benchmark_SyncPoolUnsafeRandRNG_Uint64_Serial-8        	32465599	        37.3 ns/op	       0 B/op	       0 allocs/op
+Benchmark_SyncPoolXoshiro256ssRNG_Uint64_Parallel-8    	146641885	         8.36 ns/op	       0 B/op	       0 allocs/op
+Benchmark_SyncPoolUnsafeRandRNG_Uint64_Parallel-8      	126181107	         8.91 ns/op	       0 B/op	       0 allocs/op
+Benchmark_Rand_Int31n_Serial-8                         	70664302	        17.3 ns/op	       0 B/op	       0 allocs/op
+Benchmark_Rand_Int31n_Parallel-8                       	12513151	        94.4 ns/op	       0 B/op	       0 allocs/op
+Benchmark_ValyalaFastrand_Int31n_Serial-8              	50053598	        24.1 ns/op	       0 B/op	       0 allocs/op
+Benchmark_ValyalaFastrand_Int31n_Parallel-8            	158120858	         7.97 ns/op	       0 B/op	       0 allocs/op
+Benchmark_Rand_Uint64_Serial-8                         	85800085	        14.8 ns/op	       0 B/op	       0 allocs/op
+Benchmark_Rand_Uint64_Parallel-8                       	12012588	        87.1 ns/op	       0 B/op	       0 allocs/op
+Benchmark_SyncPoolBytes_Serial_64bytes-8               	 8964448	       144 ns/op	      64 B/op	       1 allocs/op
+Benchmark_SyncPoolBytes_Serial_1024bytes-8             	 1000000	      1311 ns/op	    1024 B/op	       1 allocs/op
+Benchmark_SyncPoolBytes_Serial_1Mbytes-8               	     945	   1625825 ns/op	 1048923 B/op	       1 allocs/op
+Benchmark_SyncPoolBytes_Parallel_1024bytes-8           	 2053411	       577 ns/op	    1024 B/op	       1 allocs/op
 PASS
-ok      github.com/villenny/concurrency-go      57.292s
+ok  	github.com/villenny/fastrand64-go	32.704s
 */
